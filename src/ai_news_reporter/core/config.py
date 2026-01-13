@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     smtp_user: str = Field(default="", alias="SMTP_USER")
     smtp_password: str = Field(default="", alias="SMTP_PASSWORD")
 
-    # Slack
-    slack_webhook_url: str = Field(default="", alias="SLACK_WEBHOOK_URL")
+    # Slack Bot
+    slack_bot_token: str = Field(default="", alias="SLACK_BOT_TOKEN")
 
     # Optional settings
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
@@ -95,6 +95,10 @@ class DeliveryConfig:
     @property
     def slack_enabled(self) -> bool:
         return self.slack.get("enabled", False)
+
+    @property
+    def slack_user_ids(self) -> list[str]:
+        return self.slack.get("user_ids", [])
 
     @property
     def file_enabled(self) -> bool:

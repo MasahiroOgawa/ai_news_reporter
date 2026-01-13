@@ -159,9 +159,11 @@ delivery:
       - "your-email@example.com"
     subject_prefix: "[AI News Weekly]"
 
-  # Slack delivery
+  # Slack Bot DM delivery
   slack:
     enabled: false
+    user_ids:                 # Slack user IDs to receive DMs
+      - "U0123456789"         # Find your ID: Slack profile > ... > Copy member ID
 
   # File output
   file:

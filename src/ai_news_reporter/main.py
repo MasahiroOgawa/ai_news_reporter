@@ -151,9 +151,12 @@ async def run_report_async(settings: Settings, config: AppConfig) -> None:
             console.print(f"[red]Email delivery failed: {e}[/red]")
 
     # Slack delivery
-    if config.delivery.slack_enabled and settings.slack_webhook_url:
+    if config.delivery.slack_enabled and settings.slack_bot_token:
         try:
-            slack_delivery = SlackDelivery(webhook_url=settings.slack_webhook_url)
+            slack_delivery = SlackDelivery(
+                bot_token=settings.slack_bot_token,
+                user_ids=config.delivery.slack_user_ids,
+            )
             await slack_delivery.deliver(report)
             console.print("[green]Report sent to Slack[/green]")
             delivery_count += 1

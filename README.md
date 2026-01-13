@@ -111,9 +111,9 @@ delivery:
     subject_prefix: "[AI News Weekly]"
 ```
 
-## Optional: Slack Delivery Setup
+## Optional: Slack Bot Delivery Setup
 
-To receive reports in Slack:
+To receive reports via Slack DM from a bot:
 
 ### 1. Create Slack App
 
@@ -121,29 +121,36 @@ To receive reports in Slack:
 2. Click **Create New App** > **From scratch**
 3. Name: "AI News Reporter", select your workspace
 
-### 2. Enable Incoming Webhooks
+### 2. Configure Bot Permissions
 
-1. In the left sidebar, find **Features** section
-2. Click **Incoming Webhooks**
-3. Toggle the switch to **On**
-4. Click **Add New Webhook to Workspace**
-5. Select the channel to post to (e.g., `#ai-news`)
-6. Copy the webhook URL
+1. In the left sidebar, click **OAuth & Permissions**
+2. Under **Bot Token Scopes**, add these scopes:
+   - `chat:write` - Send messages as the bot
+   - `im:write` - Send DMs to users
+3. Click **Install to Workspace** at the top
+4. Copy the **Bot User OAuth Token** (starts with `xoxb-`)
 
-> **Note**: You may need workspace admin approval for this step.
+### 3. Find Your Slack User ID
 
-### 3. Configure config/.env
+1. Open Slack and click on your profile picture
+2. Click **Profile**
+3. Click the **...** (more) button
+4. Click **Copy member ID** (e.g., `U0123456789`)
+
+### 4. Configure config/.env
 
 ```bash
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXX
+SLACK_BOT_TOKEN=xoxb-xxxxx-xxxxx-xxxxx
 ```
 
-### 4. Enable in config/config.yaml
+### 5. Enable in config/config.yaml
 
 ```yaml
 delivery:
   slack:
     enabled: true
+    user_ids:
+      - "U0123456789"    # Your Slack user ID
 ```
 
 ## Configuration Reference
@@ -159,7 +166,7 @@ delivery:
 | `SMTP_PORT` | If using email | SMTP port (e.g., `587`) |
 | `SMTP_USER` | If using email | SMTP username/email |
 | `SMTP_PASSWORD` | If using email | SMTP password or app password |
-| `SLACK_WEBHOOK_URL` | If using Slack | Slack incoming webhook URL |
+| `SLACK_BOT_TOKEN` | If using Slack | Slack Bot OAuth token (xoxb-...) |
 
 ### Application Config (config/config.yaml)
 

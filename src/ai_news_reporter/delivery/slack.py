@@ -1,4 +1,4 @@
-"""Slack webhook delivery method."""
+"""Slack Bot delivery method for sending DMs to users."""
 
 import httpx
 
@@ -8,49 +8,80 @@ from .base import BaseDelivery
 
 
 class SlackDelivery(BaseDelivery):
-    """Delivers reports to Slack via webhook."""
+    """Delivers reports to Slack users via Bot DM."""
 
-    def __init__(self, webhook_url: str):
-        """Initialize Slack delivery.
+    SLACK_API_URL = "https://slack.com/api/chat.postMessage"
+
+    def __init__(self, bot_token: str, user_ids: list[str]):
+        """Initialize Slack Bot delivery.
 
         Args:
-            webhook_url: Slack incoming webhook URL.
+            bot_token: Slack Bot OAuth token (xoxb-...).
+            user_ids: List of Slack user IDs to send DMs to.
         """
-        if not webhook_url:
-            raise DeliveryError("Slack webhook URL is required")
-        self._webhook_url = webhook_url
+        if not bot_token:
+            raise DeliveryError("Slack Bot token is required")
+        if not user_ids:
+            raise DeliveryError("At least one Slack user ID is required")
+
+        self._bot_token = bot_token
+        self._user_ids = user_ids
 
     @property
     def name(self) -> str:
         return "Slack"
 
     async def deliver(self, report: Report) -> bool:
-        """Send report to Slack.
+        """Send report to Slack users via DM.
 
         Args:
             report: Report to send.
 
         Returns:
-            True if message was sent successfully.
+            True if messages were sent successfully.
         """
         blocks = self._format_blocks(report)
-        payload = {
-            "text": f"{report.title} - {report.date}",
-            "blocks": blocks,
+        headers = {
+            "Authorization": f"Bearer {self._bot_token}",
+            "Content-Type": "application/json",
         }
 
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self._webhook_url,
-                    json=payload,
-                    timeout=30,
-                )
-                response.raise_for_status()
-                return True
+        success_count = 0
+        errors = []
 
-        except httpx.HTTPError as e:
-            raise DeliveryError(f"Failed to send Slack message: {e}") from e
+        async with httpx.AsyncClient() as client:
+            for user_id in self._user_ids:
+                payload = {
+                    "channel": user_id,  # User ID for DM
+                    "text": f"{report.title} - {report.date}",
+                    "blocks": blocks,
+                }
+
+                try:
+                    response = await client.post(
+                        self.SLACK_API_URL,
+                        headers=headers,
+                        json=payload,
+                        timeout=30,
+                    )
+                    data = response.json()
+
+                    if data.get("ok"):
+                        success_count += 1
+                    else:
+                        errors.append(f"{user_id}: {data.get('error', 'Unknown error')}")
+
+                except httpx.HTTPError as e:
+                    errors.append(f"{user_id}: {e}")
+
+        if errors:
+            error_msg = "; ".join(errors)
+            if success_count == 0:
+                raise DeliveryError(f"Failed to send Slack DMs: {error_msg}")
+            # Partial success - log warning but don't fail
+            print(f"Warning: Some Slack DMs failed: {error_msg}")
+
+        return success_count > 0
 
     def _format_blocks(self, report: Report) -> list[dict]:
         """Format report as Slack blocks.
