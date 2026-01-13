@@ -284,7 +284,16 @@ def validate(
         console.print(f"  - Keywords: {len(config.keywords)}")
         console.print(f"  - Sites: {len(config.sites)}")
         console.print(f"  - LLM provider: {config.llm.provider}")
-        console.print(f"  - Schedule: {config.schedule.type} at {config.schedule.time}")
+        if config.schedule.type == "weekly":
+            console.print(
+                f"  - Schedule: {config.schedule.type} on {config.schedule.day_of_week} "
+                f"at {config.schedule.time} ({config.schedule.timezone})"
+            )
+        else:
+            console.print(
+                f"  - Schedule: {config.schedule.type} at {config.schedule.time} "
+                f"({config.schedule.timezone})"
+            )
 
     except Exception as e:
         console.print(f"[red]✗ {config_path} error: {e}[/red]")
