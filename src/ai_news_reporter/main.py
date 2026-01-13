@@ -1,0 +1,297 @@
+"""CLI entry point for AI News Reporter."""
+
+import asyncio
+from pathlib import Path
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
+from .collectors import TavilyCollector, WebScraper
+from .core.config import AppConfig, Settings
+from .core.exceptions import AINewsReporterError
+from .delivery import EmailDelivery, FileDelivery, SlackDelivery
+from .llm import create_llm
+from .processors import Deduplicator, Summarizer
+from .scheduler import ReportScheduler
+
+app = typer.Typer(
+    name="ai-news",
+    help="AI News Reporter - Automated AI news collection and reporting",
+)
+console = Console()
+
+
+async def run_report_async(settings: Settings, config: AppConfig) -> None:
+    """Run report generation asynchronously."""
+    all_articles = []
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        # Collect from Tavily search
+        if config.search.enabled and settings.tavily_api_key:
+            task = progress.add_task("Searching news with Tavily...", total=None)
+            try:
+                collector = TavilyCollector(settings.tavily_api_key)
+                for keyword in config.keywords:
+                    articles = await collector.collect(
+                        query=keyword,
+                        time_range=config.search.time_range,
+                        max_results=config.search.max_results_per_keyword,
+                        include_domains=config.search.include_domains or None,
+                        exclude_domains=config.search.exclude_domains or None,
+                    )
+                    all_articles.extend(articles)
+                progress.update(task, completed=True)
+            except AINewsReporterError as e:
+                console.print(f"[yellow]Tavily search failed: {e}[/yellow]")
+
+        # Collect from configured sites
+        sites = [s for s in config.sites if s.enabled]
+        if sites:
+            task = progress.add_task("Scraping configured sites...", total=None)
+            try:
+                scraper = WebScraper()
+                site_articles = await scraper.collect_from_sites(sites)
+                all_articles.extend(site_articles)
+                progress.update(task, completed=True)
+            except AINewsReporterError as e:
+                console.print(f"[yellow]Web scraping failed: {e}[/yellow]")
+
+    if not all_articles:
+        console.print("[red]No articles collected. Check your configuration.[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"[green]Collected {len(all_articles)} articles[/green]")
+
+    # Deduplicate
+    if config.report.deduplicate:
+        dedup = Deduplicator()
+        all_articles = dedup.deduplicate(all_articles)
+        console.print(f"[green]After deduplication: {len(all_articles)} articles[/green]")
+
+    # Limit articles
+    if config.report.max_articles and len(all_articles) > config.report.max_articles:
+        all_articles = all_articles[: config.report.max_articles]
+        console.print(f"[green]Limited to {len(all_articles)} articles[/green]")
+
+    # Generate report with LLM
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Generating report with LLM...", total=None)
+
+        # Determine API key based on provider
+        provider = config.llm.provider
+        if provider == "openai":
+            api_key = settings.openai_api_key
+        else:
+            api_key = settings.anthropic_api_key
+
+        llm = create_llm(
+            provider=provider,
+            api_key=api_key,
+            model=config.llm.model,
+            max_tokens=config.llm.max_tokens,
+            temperature=config.llm.temperature,
+        )
+
+        summarizer = Summarizer(llm)
+        report = await summarizer.generate_report(
+            articles=all_articles,
+            title=config.report.title,
+            prompt=config.llm.summary_prompt,
+            recipients=config.delivery.email_recipients,
+        )
+        progress.update(task, completed=True)
+
+    console.print(f"[green]Report generated: {report.title}[/green]")
+
+    # Deliver report
+    delivery_count = 0
+
+    # File delivery
+    if config.delivery.file_enabled:
+        try:
+            file_delivery = FileDelivery(
+                output_dir=Path(config.delivery.file_output_dir),
+                formats=config.delivery.file_formats,
+            )
+            await file_delivery.deliver(report)
+            console.print(
+                f"[green]Report saved to {file_delivery.output_dir}[/green]"
+            )
+            delivery_count += 1
+        except AINewsReporterError as e:
+            console.print(f"[red]File delivery failed: {e}[/red]")
+
+    # Email delivery
+    if config.delivery.email_enabled:
+        try:
+            email_delivery = EmailDelivery(
+                host=settings.smtp_host,
+                port=settings.smtp_port,
+                user=settings.smtp_user,
+                password=settings.smtp_password,
+                recipients=config.delivery.email_recipients,
+                subject_prefix=config.delivery.email_subject_prefix,
+            )
+            await email_delivery.deliver(report)
+            console.print("[green]Report sent via email[/green]")
+            delivery_count += 1
+        except AINewsReporterError as e:
+            console.print(f"[red]Email delivery failed: {e}[/red]")
+
+    # Slack delivery
+    if config.delivery.slack_enabled and settings.slack_webhook_url:
+        try:
+            slack_delivery = SlackDelivery(webhook_url=settings.slack_webhook_url)
+            await slack_delivery.deliver(report)
+            console.print("[green]Report sent to Slack[/green]")
+            delivery_count += 1
+        except AINewsReporterError as e:
+            console.print(f"[red]Slack delivery failed: {e}[/red]")
+
+    if delivery_count == 0:
+        console.print("[yellow]Warning: No delivery methods succeeded[/yellow]")
+
+
+@app.command()
+def run(
+    config_path: Path = typer.Option(
+        Path("config.yaml"),
+        "--config",
+        "-c",
+        help="Path to configuration file",
+    ),
+) -> None:
+    """Run news collection and report generation."""
+    console.print(
+        Panel.fit(
+            "[bold blue]AI News Reporter[/bold blue]\n"
+            "Collecting and summarizing AI news",
+            border_style="blue",
+        )
+    )
+
+    try:
+        settings = Settings()
+        config = AppConfig(config_path)
+    except Exception as e:
+        console.print(f"[red]Configuration error: {e}[/red]")
+        raise typer.Exit(1) from e
+
+    try:
+        asyncio.run(run_report_async(settings, config))
+        console.print("[bold green]Report generation complete![/bold green]")
+    except AINewsReporterError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1) from e
+
+
+@app.command()
+def schedule(
+    config_path: Path = typer.Option(
+        Path("config.yaml"),
+        "--config",
+        "-c",
+        help="Path to configuration file",
+    ),
+) -> None:
+    """Start the scheduler daemon for automated reports."""
+    console.print(
+        Panel.fit(
+            "[bold blue]AI News Reporter Scheduler[/bold blue]\n"
+            "Running in daemon mode",
+            border_style="blue",
+        )
+    )
+
+    try:
+        settings = Settings()
+        config = AppConfig(config_path)
+    except Exception as e:
+        console.print(f"[red]Configuration error: {e}[/red]")
+        raise typer.Exit(1) from e
+
+    schedule_config = config.schedule
+    if not schedule_config.enabled:
+        console.print("[yellow]Scheduling is disabled in config[/yellow]")
+        raise typer.Exit(0)
+
+    console.print(
+        f"[green]Scheduling {schedule_config.type} reports on "
+        f"{schedule_config.day_of_week} at {schedule_config.time} "
+        f"({schedule_config.timezone})[/green]"
+    )
+
+    def job():
+        asyncio.run(run_report_async(settings, config))
+
+    scheduler = ReportScheduler(timezone=schedule_config.timezone)
+    scheduler.schedule_from_config(schedule_config, job)
+
+    console.print("[green]Scheduler started. Press Ctrl+C to stop.[/green]")
+    scheduler.run_forever()
+
+
+@app.command()
+def validate(
+    config_path: Path = typer.Option(
+        Path("config.yaml"),
+        "--config",
+        "-c",
+        help="Path to configuration file",
+    ),
+) -> None:
+    """Validate configuration files."""
+    console.print("[bold]Validating configuration...[/bold]")
+
+    # Check .env
+    try:
+        settings = Settings()
+        console.print("[green]✓ .env loaded[/green]")
+
+        if settings.anthropic_api_key:
+            console.print("  - Anthropic API key: configured")
+        else:
+            console.print("  - [yellow]Anthropic API key: not set[/yellow]")
+
+        if settings.openai_api_key:
+            console.print("  - OpenAI API key: configured")
+        else:
+            console.print("  - [yellow]OpenAI API key: not set[/yellow]")
+
+        if settings.tavily_api_key:
+            console.print("  - Tavily API key: configured")
+        else:
+            console.print("  - [yellow]Tavily API key: not set[/yellow]")
+
+    except Exception as e:
+        console.print(f"[red]✗ .env error: {e}[/red]")
+        raise typer.Exit(1) from e
+
+    # Check config.yaml
+    try:
+        config = AppConfig(config_path)
+        console.print(f"[green]✓ {config_path} loaded[/green]")
+        console.print(f"  - Keywords: {len(config.keywords)}")
+        console.print(f"  - Sites: {len(config.sites)}")
+        console.print(f"  - LLM provider: {config.llm.provider}")
+        console.print(f"  - Schedule: {config.schedule.type} at {config.schedule.time}")
+
+    except Exception as e:
+        console.print(f"[red]✗ {config_path} error: {e}[/red]")
+        raise typer.Exit(1) from e
+
+    console.print("[bold green]Configuration is valid![/bold green]")
+
+
+if __name__ == "__main__":
+    app()

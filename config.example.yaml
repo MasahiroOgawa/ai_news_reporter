@@ -1,0 +1,125 @@
+# AI News Reporter Configuration
+# Copy this file to config.yaml and customize
+
+# Keywords to search for news
+keywords:
+  - "artificial intelligence"
+  - "machine learning"
+  - "large language models"
+  - "Claude AI"
+  - "OpenAI GPT"
+  - "generative AI"
+
+# Reference sites to scrape directly
+sites:
+  - name: "TechCrunch AI"
+    url: "https://techcrunch.com/category/artificial-intelligence/"
+    enabled: true
+    selectors:
+      article: "article.post-block"
+      title: "h2.post-block__title a"
+      link: "h2.post-block__title a"
+      content: "div.post-block__content"
+      date: "time"
+
+  - name: "MIT Technology Review"
+    url: "https://www.technologyreview.com/topic/artificial-intelligence/"
+    enabled: true
+    selectors:
+      article: "article"
+      title: "h3 a"
+      link: "h3 a"
+      content: "p"
+      date: "time"
+
+  - name: "VentureBeat AI"
+    url: "https://venturebeat.com/category/ai/"
+    enabled: true
+    selectors:
+      article: "article"
+      title: "h2 a"
+      link: "h2 a"
+      content: "p"
+      date: "time"
+
+# Tavily search configuration
+search:
+  enabled: true
+  time_range: "week"        # day, week, month, year
+  max_results_per_keyword: 10
+  include_domains: []       # Empty = all domains
+  exclude_domains:
+    - "reddit.com"
+    - "twitter.com"
+    - "x.com"
+
+# LLM configuration
+llm:
+  provider: "claude"        # claude, openai
+  model: "claude-sonnet-4-20250514"  # or gpt-4o for OpenAI
+  max_tokens: 4096
+  temperature: 0.3
+
+  # Summarization prompt template (optional)
+  summary_prompt: |
+    You are a professional news analyst specializing in artificial intelligence and technology.
+
+    Analyze the following news articles and create a comprehensive weekly report. Your report should:
+
+    1. **Executive Summary**: A brief overview of the week's most important developments (2-3 paragraphs)
+
+    2. **Key Developments**: Group related articles by topic and summarize the main points:
+       - Highlight breakthrough technologies or significant announcements
+       - Note important company updates or product launches
+       - Identify emerging trends or patterns
+
+    3. **Industry Impact**: Analyze how these developments might affect:
+       - The AI/tech industry
+       - Related sectors
+       - Society and end users
+
+    4. **Trends to Watch**: Identify 3-5 ongoing trends based on the news coverage
+
+    Format the report in clean markdown with clear sections and bullet points.
+    Include source references where relevant.
+
+    Here are the articles to analyze:
+
+    {articles}
+
+# Scheduling configuration
+schedule:
+  enabled: true
+  type: "weekly"            # daily, weekly
+  day_of_week: "monday"     # For weekly schedule
+  time: "09:00"             # 24-hour format
+  timezone: "Asia/Tokyo"    # IANA timezone
+
+# Delivery configuration
+delivery:
+  # Email delivery
+  email:
+    enabled: false
+    recipients:
+      - "your-email@example.com"
+    subject_prefix: "[AI News Weekly]"
+
+  # Slack delivery
+  slack:
+    enabled: false
+
+  # File output
+  file:
+    enabled: true
+    output_dir: "./reports"
+    formats:
+      - "markdown"
+      - "html"
+      - "json"
+
+# Report settings
+report:
+  title: "AI News Weekly Report"
+  max_articles: 50
+  deduplicate: true
+  include_sources: true

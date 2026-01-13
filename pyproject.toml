@@ -1,0 +1,46 @@
+[project]
+name = "ai-news-reporter"
+version = "0.1.0"
+description = "Automated AI news collection and reporting system with LLM summarization"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "httpx>=0.25",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "tavily-python>=0.5",
+    "anthropic>=0.40",
+    "openai>=1.50",
+    "apscheduler>=3.10",
+    "typer>=0.12",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+web = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+]
+
+[project.scripts]
+ai-news = "ai_news_reporter.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_news_reporter"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
