@@ -176,7 +176,7 @@ class ClaudeLLM(BaseLLM):
 """
         # Highlight news with images (normal text, no ### headers)
         for i, article in enumerate(highlight_articles, 1):
-            report += f"**2.{i}. [{article.title}]({article.url})**\n\n"
+            report += f"**2.{i}.** [{article.title}]({article.url})\n\n"
             if article.image_url:
                 report += f"![{article.title}]({article.image_url})\n\n"
             clean_content = self._clean_article_content(article.content)

@@ -117,11 +117,9 @@ class LLMConfig:
         self.model: str = data.get("model", "claude-sonnet-4-20250514")
         self.max_tokens: int = data.get("max_tokens", 4096)
         self.temperature: float = data.get("temperature", 0.3)
-        self.summary_prompt: str = data.get(
-            "summary_prompt",
-            "You are a professional news analyst. Analyze the following news articles "
-            "and create a comprehensive weekly report.",
-        )
+        # summary_prompt is deprecated - use report.focus instead
+        # Return None to use the built-in DEFAULT_SUMMARY_PROMPT
+        self.summary_prompt: str | None = data.get("summary_prompt")
 
 
 class ReportConfig:

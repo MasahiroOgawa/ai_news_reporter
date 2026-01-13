@@ -148,7 +148,7 @@ def _generate_report_section(articles: list[Article], highlight_count: int = 10)
 
     report = "## 2. Highlight News\n\n"
     for i, article in enumerate(highlight_articles, 1):
-        report += f"**2.{i}. [{article.title}]({article.url})**\n\n"
+        report += f"**2.{i}.** [{article.title}]({article.url})\n\n"
         if article.image_url:
             report += f"![{article.title}]({article.image_url})\n\n"
         report += f"{article.content}\n\n"
