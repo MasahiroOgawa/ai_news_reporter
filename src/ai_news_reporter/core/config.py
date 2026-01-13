@@ -132,6 +132,8 @@ class ReportConfig:
         self.max_articles: int = data.get("max_articles", 50)
         self.deduplicate: bool = data.get("deduplicate", True)
         self.include_sources: bool = data.get("include_sources", True)
+        self.highlight_count: int = data.get("highlight_count", 10)
+        self.focus: str = data.get("focus", "")
 
 
 class AppConfig:

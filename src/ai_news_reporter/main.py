@@ -108,6 +108,8 @@ async def run_report_async(settings: Settings, config: AppConfig) -> None:
             title=config.report.title,
             prompt=config.llm.summary_prompt,
             recipients=config.delivery.email_recipients,
+            highlight_count=config.report.highlight_count,
+            focus=config.report.focus,
         )
         progress.update(task, completed=True)
 

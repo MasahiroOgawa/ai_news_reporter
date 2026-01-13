@@ -24,6 +24,8 @@ class Summarizer:
         title: str = "AI News Weekly Report",
         prompt: str | None = None,
         recipients: list[str] | None = None,
+        highlight_count: int = 10,
+        focus: str = "",
     ) -> Report:
         """Generate a complete report from articles.
 
@@ -32,15 +34,19 @@ class Summarizer:
             title: Report title.
             prompt: Optional custom prompt for LLM.
             recipients: Optional list of report recipients.
+            highlight_count: Number of articles to feature in Highlight News.
+            focus: Optional focus instructions for the report.
 
         Returns:
             Generated Report object.
         """
         # Generate summary using LLM
-        summary = await self._llm.summarize(articles, prompt)
+        summary = await self._llm.summarize(articles, prompt, focus)
 
         # Generate full markdown report
-        content_markdown = await self._llm.generate_report(articles, title, prompt)
+        content_markdown = await self._llm.generate_report(
+            articles, title, prompt, highlight_count, focus
+        )
 
         # Generate plain text version (strip markdown)
         content_text = self._markdown_to_text(content_markdown)

@@ -9,12 +9,18 @@ class BaseLLM(ABC):
     """Abstract base class for LLM providers."""
 
     @abstractmethod
-    async def summarize(self, articles: list[Article], prompt: str | None = None) -> str:
+    async def summarize(
+        self,
+        articles: list[Article],
+        prompt: str | None = None,
+        focus: str = "",
+    ) -> str:
         """Generate a summary from collected articles.
 
         Args:
             articles: List of articles to summarize.
             prompt: Optional custom prompt template.
+            focus: Optional focus instructions for the report.
 
         Returns:
             Generated summary text.
@@ -28,6 +34,7 @@ class BaseLLM(ABC):
         title: str,
         prompt: str | None = None,
         highlight_count: int = 10,
+        focus: str = "",
     ) -> str:
         """Generate a full report from collected articles.
 
@@ -36,6 +43,7 @@ class BaseLLM(ABC):
             title: Report title.
             prompt: Optional custom prompt template.
             highlight_count: Number of articles to feature in Highlight News.
+            focus: Optional focus instructions for the report.
 
         Returns:
             Generated report in markdown format.

@@ -18,7 +18,7 @@ IMPORTANT RULES:
 - NO headers, NO subsections, NO bullet points, NO numbered lists.
 - Include inline source links using [Source Name](URL) format.
 - Example: "This week saw major advances in AI healthcare with [Utah's prescription AI initiative](url) and [OpenAI's Torch acquisition](url)."
-
+{focus}
 Here are the articles to analyze:
 
 {articles}
@@ -55,12 +55,18 @@ class ClaudeLLM(BaseLLM):
     def provider_name(self) -> str:
         return "Claude (Anthropic)"
 
-    async def summarize(self, articles: list[Article], prompt: str | None = None) -> str:
+    async def summarize(
+        self,
+        articles: list[Article],
+        prompt: str | None = None,
+        focus: str = "",
+    ) -> str:
         """Generate a summary using Claude.
 
         Args:
             articles: List of articles to summarize.
             prompt: Optional custom prompt.
+            focus: Optional focus instructions for the report.
 
         Returns:
             Generated summary.
@@ -69,7 +75,10 @@ class ClaudeLLM(BaseLLM):
             return "No articles to summarize."
 
         context = self._format_articles_for_context(articles)
-        full_prompt = (prompt or DEFAULT_SUMMARY_PROMPT).format(articles=context)
+        focus_text = f"\nFOCUS: {focus}\n" if focus else ""
+        full_prompt = (prompt or DEFAULT_SUMMARY_PROMPT).format(
+            articles=context, focus=focus_text
+        )
 
         try:
             message = self._client.messages.create(
@@ -130,6 +139,7 @@ class ClaudeLLM(BaseLLM):
         title: str,
         prompt: str | None = None,
         highlight_count: int = 10,
+        focus: str = "",
     ) -> str:
         """Generate a full report using Claude.
 
@@ -138,11 +148,12 @@ class ClaudeLLM(BaseLLM):
             title: Report title.
             prompt: Optional custom prompt.
             highlight_count: Number of articles to feature in Highlight News.
+            focus: Optional focus instructions for the report.
 
         Returns:
             Generated report in markdown.
         """
-        summary = await self.summarize(articles, prompt)
+        summary = await self.summarize(articles, prompt, focus)
 
         # Split articles into highlights and related
         highlight_articles = articles[:highlight_count]

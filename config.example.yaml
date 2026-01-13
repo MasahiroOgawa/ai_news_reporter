@@ -142,41 +142,6 @@ llm:
   max_tokens: 4096
   temperature: 0.3
 
-  # Summarization prompt template (optional)
-  summary_prompt: |
-    You are a professional news analyst specializing in artificial intelligence and technology.
-
-    Analyze the following news articles and create a comprehensive weekly report. Your report should:
-
-    1. **Executive Summary**: A brief overview of the week's most important developments (2-3 paragraphs)
-
-    2. **Key Developments**: For EACH article, create a subsection with:
-       - The article title as a heading with link: ### [Title](url)
-       - The representative image if available: ![](image_url)
-       - A 2-3 sentence summary of the key points
-       - Source attribution
-
-    3. **Industry Impact**: Analyze how these developments might affect the AI/tech industry
-
-    4. **Trends to Watch**: Identify 3-5 ongoing trends based on the news coverage
-
-    CRITICAL FORMATTING RULES:
-    - For EVERY article mentioned, include its image using: ![](image_url)
-    - Place the image immediately after the article title/heading
-    - Use the exact image URLs provided in the article data
-    - If an article has no image, skip the image line for that article
-
-    Example format for each article:
-    ### [Google Announces New AI Model](https://example.com/article)
-    ![](https://example.com/image.jpg)
-    Google has released a groundbreaking new AI model that... *Source: TechCrunch*
-
-    Format the report in clean markdown with clear sections.
-
-    Here are the articles to analyze:
-
-    {articles}
-
 # Scheduling configuration
 schedule:
   enabled: true
@@ -213,3 +178,12 @@ report:
   max_articles: 50
   deduplicate: true
   include_sources: true
+  highlight_count: 10       # Number of articles to feature in Highlight News section
+
+  # Focus instructions for the report (optional)
+  # Use this to customize what topics the report should emphasize or exclude
+  # Examples:
+  #   - "Focus on technical AI developments and research. Exclude business news."
+  #   - "Focus on healthcare and biotech AI applications only."
+  #   - "Exclude stock prices, financial analysis, and market reports."
+  focus: ""
