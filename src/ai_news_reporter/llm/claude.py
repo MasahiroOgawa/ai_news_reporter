@@ -116,19 +116,24 @@ class ClaudeLLM(BaseLLM):
 
 ---
 
+## Executive Summary
+
 {summary}
 
 ---
 
-## Sources
+## All Articles
 
 """
+        # Programmatically add EVERY article with image
         for article in articles:
+            report += f"### [{article.title}]({article.url})\n\n"
             if article.image_url:
-                report += f"### [{article.title}]({article.url})\n"
-                report += f"![{article.title}]({article.image_url})\n"
-                report += f"*Source: {article.source}*\n\n"
-            else:
-                report += f"- [{article.title}]({article.url}) - {article.source}\n"
+                report += f"![{article.title}]({article.image_url})\n\n"
+            report += f"{article.content}\n\n"
+            report += f"*Source: {article.source}*"
+            if article.published_at:
+                report += f" | *Published: {article.published_at.strftime('%Y-%m-%d')}*"
+            report += "\n\n---\n\n"
 
         return report
