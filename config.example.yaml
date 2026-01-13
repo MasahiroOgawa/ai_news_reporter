@@ -150,24 +150,28 @@ llm:
 
     1. **Executive Summary**: A brief overview of the week's most important developments (2-3 paragraphs)
 
-    2. **Key Developments**: Group related articles by topic and summarize the main points:
-       - Highlight breakthrough technologies or significant announcements
-       - Note important company updates or product launches
-       - Identify emerging trends or patterns
+    2. **Key Developments**: For EACH article, create a subsection with:
+       - The article title as a heading with link: ### [Title](url)
+       - The representative image if available: ![](image_url)
+       - A 2-3 sentence summary of the key points
+       - Source attribution
 
-    3. **Industry Impact**: Analyze how these developments might affect:
-       - The AI/tech industry
-       - Related sectors
-       - Society and end users
+    3. **Industry Impact**: Analyze how these developments might affect the AI/tech industry
 
     4. **Trends to Watch**: Identify 3-5 ongoing trends based on the news coverage
 
-    IMPORTANT: Include source links inline within the text using markdown format [title](url).
-    Every key fact or claim should have its source linked directly in the sentence.
-    Example: "Google announced a new AI model ([source](https://example.com/article))."
-    Do NOT put all references at the end - embed them in the relevant sentences.
+    CRITICAL FORMATTING RULES:
+    - For EVERY article mentioned, include its image using: ![](image_url)
+    - Place the image immediately after the article title/heading
+    - Use the exact image URLs provided in the article data
+    - If an article has no image, skip the image line for that article
 
-    Format the report in clean markdown with clear sections and bullet points.
+    Example format for each article:
+    ### [Google Announces New AI Model](https://example.com/article)
+    ![](https://example.com/image.jpg)
+    Google has released a groundbreaking new AI model that... *Source: TechCrunch*
+
+    Format the report in clean markdown with clear sections.
 
     Here are the articles to analyze:
 
