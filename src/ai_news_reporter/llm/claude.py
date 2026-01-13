@@ -124,6 +124,11 @@ class ClaudeLLM(BaseLLM):
 
 """
         for article in articles:
-            report += f"- [{article.title}]({article.url}) - {article.source}\n"
+            if article.image_url:
+                report += f"### [{article.title}]({article.url})\n"
+                report += f"![{article.title}]({article.image_url})\n"
+                report += f"*Source: {article.source}*\n\n"
+            else:
+                report += f"- [{article.title}]({article.url}) - {article.source}\n"
 
         return report

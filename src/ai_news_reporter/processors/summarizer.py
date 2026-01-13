@@ -97,6 +97,13 @@ class Summarizer:
         html = re.sub(r"^## (.+)$", r"<h2>\1</h2>", html, flags=re.MULTILINE)
         html = re.sub(r"^### (.+)$", r"<h3>\1</h3>", html, flags=re.MULTILINE)
 
+        # Convert images (must be before links)
+        html = re.sub(
+            r"!\[([^\]]*)\]\(([^)]+)\)",
+            r'<img src="\2" alt="\1" style="max-width: 100%; height: auto; margin: 10px 0;">',
+            html,
+        )
+
         # Convert bold and italic
         html = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", html)
         html = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", html)
@@ -132,6 +139,7 @@ class Summarizer:
         a {{ color: #0066cc; }}
         li {{ margin: 8px 0; }}
         hr {{ border: none; border-top: 1px solid #ddd; margin: 20px 0; }}
+        img {{ max-width: 100%; height: auto; border-radius: 8px; }}
     </style>
 </head>
 <body>

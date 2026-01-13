@@ -57,11 +57,15 @@ class BaseLLM(ABC):
         """
         formatted = []
         for i, article in enumerate(articles, 1):
+            image_line = ""
+            if article.image_url:
+                image_line = f"- **Image**: {article.image_url}\n"
+
             entry = f"""
 ### Article {i}: {article.title}
 - **Source**: {article.source}
 - **URL**: {article.url}
-- **Published**: {article.published_at or 'Unknown'}
+{image_line}- **Published**: {article.published_at or 'Unknown'}
 
 {article.content}
 """

@@ -99,6 +99,7 @@ class WebScraper(BaseCollector):
         link_selector = selectors.get("link", "a")
         content_selector = selectors.get("content", "p")
         date_selector = selectors.get("date", "time")
+        image_selector = selectors.get("image", "img")
 
         article_elements = soup.select(article_selector)
 
@@ -134,11 +135,25 @@ class WebScraper(BaseCollector):
                         except ValueError:
                             pass
 
+                # Extract image
+                image_url = None
+                img_elem = element.select_one(image_selector)
+                if img_elem:
+                    # Try different image attributes
+                    image_src = (
+                        img_elem.get("src")
+                        or img_elem.get("data-src")
+                        or img_elem.get("data-lazy-src")
+                    )
+                    if image_src:
+                        image_url = urljoin(base_url, image_src)
+
                 article = Article(
                     title=title,
                     url=url,
                     content=content,
                     source=source_name,
+                    image_url=image_url,
                     published_at=published_at,
                     collected_at=datetime.now(),
                 )

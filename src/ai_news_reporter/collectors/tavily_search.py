@@ -56,15 +56,24 @@ class TavilyCollector(BaseCollector):
                 max_results=max_results,
                 include_domains=include_domains or [],
                 exclude_domains=exclude_domains or [],
+                include_images=True,
             )
 
             articles = []
             for result in response.get("results", []):
+                # Extract image URL from result
+                image_url = None
+                if result.get("images"):
+                    image_url = result["images"][0] if result["images"] else None
+                elif result.get("image"):
+                    image_url = result["image"]
+
                 article = Article(
                     title=result.get("title", "Untitled"),
                     url=result.get("url"),
                     content=result.get("content", ""),
                     source="Tavily Search",
+                    image_url=image_url,
                     published_at=self._parse_date(result.get("published_date")),
                     collected_at=datetime.now(),
                     keywords=[query],

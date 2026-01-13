@@ -13,6 +13,7 @@ class Article(BaseModel):
     content: str
     summary: str | None = None
     source: str
+    image_url: str | None = None
     published_at: datetime | None = None
     collected_at: datetime = datetime.now()
     keywords: list[str] = []

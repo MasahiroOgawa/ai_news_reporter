@@ -92,14 +92,38 @@ class SlackDelivery(BaseDelivery):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Top Sources:*\n"
-                    + "\n".join(
-                        f"• <{a.url}|{self._truncate_text(a.title, 50)}>"
-                        for a in report.articles[:5]
-                    ),
+                    "text": "*Top Sources:*",
                 },
             },
         ]
+
+        # Add top articles with images
+        for article in report.articles[:5]:
+            if article.image_url:
+                blocks.append(
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"*<{article.url}|{self._truncate_text(article.title, 100)}>*\n_{article.source}_",
+                        },
+                        "accessory": {
+                            "type": "image",
+                            "image_url": article.image_url,
+                            "alt_text": article.title,
+                        },
+                    }
+                )
+            else:
+                blocks.append(
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"• *<{article.url}|{self._truncate_text(article.title, 100)}>* - _{article.source}_",
+                        },
+                    }
+                )
 
         return blocks
 

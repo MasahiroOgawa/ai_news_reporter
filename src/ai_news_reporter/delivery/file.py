@@ -62,6 +62,7 @@ class FileDelivery(BaseDelivery):
                                 "title": a.title,
                                 "url": str(a.url),
                                 "source": a.source,
+                                "image_url": a.image_url,
                                 "published_at": (
                                     a.published_at.isoformat() if a.published_at else None
                                 ),
