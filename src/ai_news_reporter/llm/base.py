@@ -27,6 +27,7 @@ class BaseLLM(ABC):
         articles: list[Article],
         title: str,
         prompt: str | None = None,
+        highlight_count: int = 10,
     ) -> str:
         """Generate a full report from collected articles.
 
@@ -34,6 +35,7 @@ class BaseLLM(ABC):
             articles: List of articles to include in report.
             title: Report title.
             prompt: Optional custom prompt template.
+            highlight_count: Number of articles to feature in Highlight News.
 
         Returns:
             Generated report in markdown format.

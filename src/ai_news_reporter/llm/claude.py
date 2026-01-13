@@ -1,5 +1,7 @@
 """Claude (Anthropic) LLM implementation."""
 
+import re
+
 import anthropic
 
 from ..core.exceptions import LLMError
@@ -9,24 +11,13 @@ from .base import BaseLLM
 
 DEFAULT_SUMMARY_PROMPT = """You are a professional news analyst specializing in artificial intelligence and technology.
 
-Analyze the following news articles and create a comprehensive weekly report. Your report should:
+Write a brief 2-3 sentence executive summary of the key AI developments this week.
 
-1. **Executive Summary**: A brief overview of the week's most important developments (2-3 paragraphs)
-
-2. **Key Developments**: Group related articles by topic and summarize the main points:
-   - Highlight breakthrough technologies or significant announcements
-   - Note important company updates or product launches
-   - Identify emerging trends or patterns
-
-3. **Industry Impact**: Analyze how these developments might affect:
-   - The AI/tech industry
-   - Related sectors
-   - Society and end users
-
-4. **Trends to Watch**: Identify 3-5 ongoing trends based on the news coverage
-
-Format the report in clean markdown with clear sections and bullet points.
-Include source references where relevant.
+IMPORTANT RULES:
+- Write ONLY 2-3 SHORT sentences. Be concise.
+- NO headers, NO subsections, NO bullet points, NO numbered lists.
+- Include inline source links using [Source Name](URL) format.
+- Example: "This week saw major advances in AI healthcare with [Utah's prescription AI initiative](url) and [OpenAI's Torch acquisition](url)."
 
 Here are the articles to analyze:
 
@@ -87,16 +78,58 @@ class ClaudeLLM(BaseLLM):
                 temperature=self._temperature,
                 messages=[{"role": "user", "content": full_prompt}],
             )
-            return message.content[0].text
+            summary = message.content[0].text
+            return self._clean_summary(summary)
 
         except anthropic.APIError as e:
             raise LLMError(f"Claude API error: {e}") from e
+
+    def _clean_summary(self, summary: str) -> str:
+        """Remove markdown headers, images, lists, and extra formatting from summary.
+
+        Keep only the first paragraph (2-3 sentences max).
+        """
+        lines = summary.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            # Skip lines that are markdown headers
+            if re.match(r'^#{1,6}\s', line):
+                continue
+            # Skip lines that are just "Executive Summary" or similar titles
+            if re.match(r'^\*{0,2}(Executive Summary|Key Developments|Industry Impact|Trends to Watch|Weekly.*Report)\*{0,2}\s*$', line, re.IGNORECASE):
+                continue
+            # Skip image lines
+            if re.match(r'^!\[', line):
+                continue
+            # Skip numbered list items (1. **Title**: ...)
+            if re.match(r'^\d+\.\s+\*\*', line):
+                continue
+            # Skip lines that are just source references
+            if re.match(r'^\*Source:', line):
+                continue
+            cleaned_lines.append(line)
+
+        # Join and remove multiple consecutive blank lines
+        result = '\n'.join(cleaned_lines)
+        result = re.sub(r'\n{3,}', '\n\n', result)
+        result = result.strip()
+
+        # Keep only first paragraph (should be 2-3 sentences)
+        paragraphs = [p.strip() for p in result.split('\n\n') if p.strip()]
+        if paragraphs:
+            # Return only the first substantial paragraph, max 600 chars
+            first = paragraphs[0]
+            if len(first) > 600:
+                first = first[:600].rsplit('.', 1)[0] + '.'
+            return first
+        return result
 
     async def generate_report(
         self,
         articles: list[Article],
         title: str,
         prompt: str | None = None,
+        highlight_count: int = 10,
     ) -> str:
         """Generate a full report using Claude.
 
@@ -104,11 +137,16 @@ class ClaudeLLM(BaseLLM):
             articles: List of articles.
             title: Report title.
             prompt: Optional custom prompt.
+            highlight_count: Number of articles to feature in Highlight News.
 
         Returns:
             Generated report in markdown.
         """
         summary = await self.summarize(articles, prompt)
+
+        # Split articles into highlights and related
+        highlight_articles = articles[:highlight_count]
+        related_articles = articles[highlight_count:]
 
         report = f"""# {title}
 
@@ -116,24 +154,43 @@ class ClaudeLLM(BaseLLM):
 
 ---
 
-## Executive Summary
+## 1. Executive Summary
 
 {summary}
 
 ---
 
-## All Articles
+## 2. Highlight News
 
 """
-        # Programmatically add EVERY article with image
-        for article in articles:
-            report += f"### [{article.title}]({article.url})\n\n"
+        # Highlight news with images (normal text, no ### headers)
+        for i, article in enumerate(highlight_articles, 1):
+            report += f"**2.{i}. [{article.title}]({article.url})**\n\n"
             if article.image_url:
                 report += f"![{article.title}]({article.image_url})\n\n"
-            report += f"{article.content}\n\n"
+            clean_content = self._clean_article_content(article.content)
+            report += f"{clean_content}\n\n"
             report += f"*Source: {article.source}*"
             if article.published_at:
                 report += f" | *Published: {article.published_at.strftime('%Y-%m-%d')}*"
             report += "\n\n---\n\n"
 
+        # Related news (citations) without images
+        if related_articles:
+            report += "## 3. Related News\n\n"
+            for i, article in enumerate(related_articles, 1):
+                report += f"**3.{i}.** [{article.title}]({article.url})"
+                if article.published_at:
+                    report += f" ({article.published_at.strftime('%Y-%m-%d')})"
+                clean_content = self._clean_article_content(article.content[:200])
+                report += f"\n\n{clean_content}{'...' if len(article.content) > 200 else ''}\n\n"
+
         return report
+
+    def _clean_article_content(self, content: str) -> str:
+        """Remove all markdown headers and formatting from article content."""
+        # Remove markdown headers anywhere (# ## ### etc followed by space)
+        content = re.sub(r'#{1,6}\s+', '', content)
+        # Remove standalone * bullets
+        content = re.sub(r'^\*\s+', '', content, flags=re.MULTILINE)
+        return content.strip()

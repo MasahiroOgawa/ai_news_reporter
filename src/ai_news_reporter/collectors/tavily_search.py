@@ -1,5 +1,6 @@
 """Tavily API collector for news search."""
 
+import asyncio
 from datetime import datetime
 
 from tavily import TavilyClient
@@ -7,20 +8,23 @@ from tavily import TavilyClient
 from ..core.exceptions import CollectorError
 from ..models.article import Article
 from .base import BaseCollector
+from .image_extractor import extract_og_image
 
 
 class TavilyCollector(BaseCollector):
     """Collector that uses Tavily API for news search."""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, fetch_images: bool = True):
         """Initialize Tavily collector.
 
         Args:
             api_key: Tavily API key.
+            fetch_images: Whether to fetch og:image from each article.
         """
         if not api_key:
             raise CollectorError("Tavily API key is required")
         self._client = TavilyClient(api_key=api_key)
+        self._fetch_images = fetch_images
 
     @property
     def name(self) -> str:
@@ -56,30 +60,32 @@ class TavilyCollector(BaseCollector):
                 max_results=max_results,
                 include_domains=include_domains or [],
                 exclude_domains=exclude_domains or [],
-                include_images=True,
             )
 
             articles = []
             for result in response.get("results", []):
-                # Extract image URL from result
-                image_url = None
-                if result.get("images"):
-                    image_url = result["images"][0] if result["images"] else None
-                elif result.get("image"):
-                    image_url = result["image"]
-
                 article = Article(
                     title=result.get("title", "Untitled"),
                     url=result.get("url"),
                     content=result.get("content", ""),
                     source="Tavily Search",
-                    image_url=image_url,
+                    image_url=None,  # Will be fetched below
                     published_at=self._parse_date(result.get("published_date")),
                     collected_at=datetime.now(),
                     keywords=[query],
                     score=result.get("score"),
                 )
                 articles.append(article)
+
+            # Fetch og:image for each article in parallel
+            if self._fetch_images and articles:
+                image_tasks = [
+                    extract_og_image(str(article.url)) for article in articles
+                ]
+                images = await asyncio.gather(*image_tasks, return_exceptions=True)
+                for article, image in zip(articles, images):
+                    if isinstance(image, str):
+                        article.image_url = image
 
             return articles
 
