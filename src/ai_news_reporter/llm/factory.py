@@ -40,7 +40,7 @@ def create_llm(
     elif provider == "openai":
         return OpenAILLM(
             api_key=api_key,
-            model=model or "gpt-4o",
+            model=model or "gpt-4.1-mini",
             max_tokens=max_tokens,
             temperature=temperature,
         )

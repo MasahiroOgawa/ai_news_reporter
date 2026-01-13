@@ -138,7 +138,7 @@ search:
 # LLM configuration
 llm:
   provider: "claude"        # claude, openai
-  model: "claude-sonnet-4-20250514"  # or gpt-4o for OpenAI
+  model: "claude-sonnet-4-20250514"  # or gpt-4.1-mini for OpenAI
   max_tokens: 4096
   temperature: 0.3
 
