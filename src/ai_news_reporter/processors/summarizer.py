@@ -103,19 +103,25 @@ class Summarizer:
         html = re.sub(r"^## (.+)$", r"<h2>\1</h2>", html, flags=re.MULTILINE)
         html = re.sub(r"^### (.+)$", r"<h3>\1</h3>", html, flags=re.MULTILINE)
 
-        # Convert images (must be before links)
+        # Convert images (must be before links) - handle URLs with special chars
         html = re.sub(
-            r"!\[([^\]]*)\]\(([^)]+)\)",
+            r"!\[([^\]]*)\]\((https?://[^\s)]+)\)",
             r'<img src="\2" alt="\1" style="max-width: 100%; height: auto; margin: 10px 0;">',
             html,
         )
 
-        # Convert bold and italic
+        # Convert bold (must be before italic)
         html = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", html)
-        html = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", html)
 
-        # Convert links
-        html = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', html)
+        # Convert links - handle URLs with special chars
+        html = re.sub(
+            r"\[([^\]]+)\]\((https?://[^\s)]+)\)",
+            r'<a href="\2">\1</a>',
+            html,
+        )
+
+        # Convert italic (single * pairs only, not standalone *)
+        html = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"<em>\1</em>", html)
 
         # Convert bullet points
         html = re.sub(r"^- (.+)$", r"<li>\1</li>", html, flags=re.MULTILINE)
