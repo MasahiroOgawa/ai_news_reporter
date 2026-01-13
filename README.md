@@ -213,12 +213,6 @@ delivery:
 uv run ai-news run
 ```
 
-### Start Scheduled Reports
-
-```bash
-uv run ai-news schedule
-```
-
 ### Validate Configuration
 
 ```bash
@@ -229,6 +223,63 @@ uv run ai-news validate
 
 ```bash
 uv run ai-news run --config /path/to/config.yaml
+```
+
+## Automated Weekly Reports (Cron Setup)
+
+To receive reports automatically every week without manual commands:
+
+### Setup Steps
+
+1. Edit `config.yaml` - set your schedule:
+   ```yaml
+   schedule:
+     enabled: true
+     type: "weekly"           # daily or weekly
+     day_of_week: "monday"    # for weekly
+     time: "09:00"            # 24-hour format
+     timezone: "Asia/Tokyo"
+   ```
+
+2. Run the setup script:
+   ```bash
+   ./setup_cron.sh
+   ```
+
+The script reads schedule settings from `config.yaml` and sets up cron automatically.
+
+### Manual Setup
+
+If you prefer to set up cron manually:
+
+```bash
+# Open crontab editor
+crontab -e
+
+# Add this line for weekly Monday 9:00 AM reports:
+0 9 * * 1 cd /path/to/ai_news_reporter && .venv/bin/ai-news run >> cron.log 2>&1
+```
+
+Cron schedule format: `minute hour day-of-month month day-of-week`
+- `0 9 * * 1` = Monday 9:00 AM
+- `0 9 * * 5` = Friday 9:00 AM
+- `0 9 * * *` = Daily 9:00 AM
+
+### Check Cron Status
+
+```bash
+# View current cron jobs
+crontab -l
+
+# View logs
+tail -f cron.log
+```
+
+### Remove Cron Job
+
+```bash
+crontab -e
+# Delete the ai-news line and save
 ```
 
 ## Project Structure
