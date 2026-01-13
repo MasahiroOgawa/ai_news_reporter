@@ -42,6 +42,88 @@ sites:
       content: "p"
       date: "time"
 
+  # Tech Company Blogs
+  - name: "Google AI Blog"
+    url: "https://blog.google/technology/ai/"
+    enabled: true
+    selectors:
+      article: "article"
+      title: "h3 a"
+      link: "a"
+      content: "p"
+      date: "time"
+
+  - name: "Meta AI Blog"
+    url: "https://ai.meta.com/blog/"
+    enabled: true
+    selectors:
+      article: "article"
+      title: "h2 a, h3 a"
+      link: "a"
+      content: "p"
+      date: "time"
+
+  # University Research Labs
+  - name: "Stanford AI Lab"
+    url: "https://ai.stanford.edu/blog/"
+    enabled: true
+    selectors:
+      article: "article"
+      title: "h2 a, h3 a"
+      link: "a"
+      content: "p"
+      date: "time"
+
+  - name: "MIT CSAIL News"
+    url: "https://www.csail.mit.edu/news"
+    enabled: true
+    selectors:
+      article: "article"
+      title: "h2 a, h3 a"
+      link: "a"
+      content: "p"
+      date: "time"
+
+  - name: "University of Tokyo IST"
+    url: "https://www.i.u-tokyo.ac.jp/news/index_e.shtml"
+    enabled: true
+    selectors:
+      article: "article, .news-item, li"
+      title: "a"
+      link: "a"
+      content: "p"
+      date: "time, .date"
+
+  - name: "Tsinghua University AI"
+    url: "https://www.tsinghua.edu.cn/en/Research/AI.htm"
+    enabled: true
+    selectors:
+      article: "article, .news-item"
+      title: "h2 a, h3 a, a"
+      link: "a"
+      content: "p"
+      date: "time"
+
+  - name: "Oxford CS News"
+    url: "https://www.cs.ox.ac.uk/news/"
+    enabled: true
+    selectors:
+      article: "article, .news-item"
+      title: "h2 a, h3 a"
+      link: "a"
+      content: "p"
+      date: "time, .date"
+
+  - name: "Max Planck Institute for Intelligent Systems"
+    url: "https://is.mpg.de/news"
+    enabled: true
+    selectors:
+      article: "article, .news-item"
+      title: "h2 a, h3 a"
+      link: "a"
+      content: "p"
+      date: "time, .date"
+
 # Tavily search configuration
 search:
   enabled: true
