@@ -162,8 +162,12 @@ llm:
 
     4. **Trends to Watch**: Identify 3-5 ongoing trends based on the news coverage
 
+    IMPORTANT: Include source links inline within the text using markdown format [title](url).
+    Every key fact or claim should have its source linked directly in the sentence.
+    Example: "Google announced a new AI model ([source](https://example.com/article))."
+    Do NOT put all references at the end - embed them in the relevant sentences.
+
     Format the report in clean markdown with clear sections and bullet points.
-    Include source references where relevant.
 
     Here are the articles to analyze:
 
