@@ -1,6 +1,6 @@
 # Environment
-.env
-config.yaml
+config/.env
+config/config.yaml
 .venv/
 venv/
 env/

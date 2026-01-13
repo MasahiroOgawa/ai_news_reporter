@@ -1,14 +1,16 @@
 #!/bin/bash
 # AI News Reporter - Cron Setup Script
-# Reads schedule settings from config.yaml
+# Reads schedule settings from config/config.yaml
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-VENV_PATH="$SCRIPT_DIR/.venv"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+VENV_PATH="$PROJECT_DIR/.venv"
 AI_NEWS_CMD="$VENV_PATH/bin/ai-news"
-CONFIG_FILE="$SCRIPT_DIR/config.yaml"
-LOG_FILE="$SCRIPT_DIR/cron.log"
+CONFIG_FILE="$PROJECT_DIR/config/config.yaml"
+ENV_FILE="$PROJECT_DIR/config/.env"
+LOG_FILE="$PROJECT_DIR/cron.log"
 
 echo "==================================="
 echo "AI News Reporter - Cron Setup"
@@ -19,33 +21,33 @@ echo ""
 if [ ! -f "$AI_NEWS_CMD" ]; then
     echo "Setting up virtual environment..."
     python3 -m venv "$VENV_PATH"
-    "$VENV_PATH/bin/pip" install -e "$SCRIPT_DIR"
+    "$VENV_PATH/bin/pip" install -e "$PROJECT_DIR"
     echo "Virtual environment created."
 fi
 
 # Check if .env exists
-if [ ! -f "$SCRIPT_DIR/.env" ]; then
+if [ ! -f "$ENV_FILE" ]; then
     echo ""
-    echo "ERROR: .env file not found!"
-    echo "Please copy .env.example to .env and add your API keys:"
-    echo "  cp $SCRIPT_DIR/.env.example $SCRIPT_DIR/.env"
-    echo "  nano $SCRIPT_DIR/.env"
+    echo "ERROR: config/.env file not found!"
+    echo "Please copy config/.env.example to config/.env and add your API keys:"
+    echo "  cp $PROJECT_DIR/config/.env.example $PROJECT_DIR/config/.env"
+    echo "  nano $PROJECT_DIR/config/.env"
     exit 1
 fi
 
 # Check if config.yaml exists
 if [ ! -f "$CONFIG_FILE" ]; then
     echo ""
-    echo "ERROR: config.yaml not found!"
-    echo "Please copy config.example.yaml to config.yaml and customize:"
-    echo "  cp $SCRIPT_DIR/config.example.yaml $SCRIPT_DIR/config.yaml"
-    echo "  nano $SCRIPT_DIR/config.yaml"
+    echo "ERROR: config/config.yaml not found!"
+    echo "Please copy config/config.example.yaml to config/config.yaml and customize:"
+    echo "  cp $PROJECT_DIR/config/config.example.yaml $PROJECT_DIR/config/config.yaml"
+    echo "  nano $PROJECT_DIR/config/config.yaml"
     exit 1
 fi
 
 # Validate configuration
 echo "Validating configuration..."
-"$AI_NEWS_CMD" validate
+cd "$PROJECT_DIR" && "$AI_NEWS_CMD" validate
 echo ""
 
 # Parse schedule settings from config.yaml
@@ -84,10 +86,10 @@ else
 fi
 
 # Create cron entry
-CRON_ENTRY="$CRON_SCHEDULE cd $SCRIPT_DIR && $AI_NEWS_CMD run >> $LOG_FILE 2>&1"
+CRON_ENTRY="$CRON_SCHEDULE cd $PROJECT_DIR && $AI_NEWS_CMD run >> $LOG_FILE 2>&1"
 
 echo "==================================="
-echo "Schedule from config.yaml"
+echo "Schedule from config/config.yaml"
 echo "==================================="
 echo "Type: $SCHEDULE_TYPE"
 echo "Day: $SCHEDULE_DAY"

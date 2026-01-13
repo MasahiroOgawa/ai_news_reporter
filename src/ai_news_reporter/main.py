@@ -167,7 +167,7 @@ async def run_report_async(settings: Settings, config: AppConfig) -> None:
 @app.command()
 def run(
     config_path: Path = typer.Option(
-        Path("config.yaml"),
+        Path("config/config.yaml"),
         "--config",
         "-c",
         help="Path to configuration file",
@@ -200,7 +200,7 @@ def run(
 @app.command()
 def schedule(
     config_path: Path = typer.Option(
-        Path("config.yaml"),
+        Path("config/config.yaml"),
         "--config",
         "-c",
         help="Path to configuration file",
@@ -246,7 +246,7 @@ def schedule(
 @app.command()
 def validate(
     config_path: Path = typer.Option(
-        Path("config.yaml"),
+        Path("config/config.yaml"),
         "--config",
         "-c",
         help="Path to configuration file",
@@ -258,7 +258,7 @@ def validate(
     # Check .env
     try:
         settings = Settings()
-        console.print("[green]✓ .env loaded[/green]")
+        console.print("[green]✓ config/.env loaded[/green]")
 
         if settings.anthropic_api_key:
             console.print("  - Anthropic API key: configured")
@@ -276,7 +276,7 @@ def validate(
             console.print("  - [yellow]Tavily API key: not set[/yellow]")
 
     except Exception as e:
-        console.print(f"[red]✗ .env error: {e}[/red]")
+        console.print(f"[red]✗ config/.env error: {e}[/red]")
         raise typer.Exit(1) from e
 
     # Check config.yaml

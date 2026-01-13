@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Environment settings loaded from .env file."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="config/.env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
 
     # Optional settings
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
-    config_path: str = Field(default="config.yaml", alias="CONFIG_PATH")
+    config_path: str = Field(default="config/config.yaml", alias="CONFIG_PATH")
 
 
 class SiteConfig:
@@ -137,7 +137,7 @@ class ReportConfig:
 class AppConfig:
     """Application configuration loaded from YAML file."""
 
-    def __init__(self, config_path: Path | str = Path("config.yaml")):
+    def __init__(self, config_path: Path | str = Path("config/config.yaml")):
         self._config_path = Path(config_path)
         self._config: dict[str, Any] = {}
         self._load()

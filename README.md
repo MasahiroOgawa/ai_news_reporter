@@ -23,8 +23,8 @@ cd ai_news_reporter
 uv sync
 
 # Copy configuration files
-cp .env.example .env
-cp config.example.yaml config.yaml
+cp config/.env.example config/.env
+cp config/config.example.yaml config/config.yaml
 ```
 
 ## Quick Start (Minimal Setup)
@@ -35,7 +35,7 @@ For a minimal setup with file output only, you need just 2 API keys:
 
 1. Go to [tavily.com](https://tavily.com/)
 2. Sign up and get your API key
-3. Add to `.env`:
+3. Add to `config/.env`:
    ```bash
    TAVILY_API_KEY=tvly-xxxxx
    ```
@@ -45,11 +45,11 @@ For a minimal setup with file output only, you need just 2 API keys:
 **Option A: OpenAI**
 1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 2. Create an API key
-3. Add to `.env`:
+3. Add to `config/.env`:
    ```bash
    OPENAI_API_KEY=sk-xxxxx
    ```
-4. Set provider in `config.yaml`:
+4. Set provider in `config/config.yaml`:
    ```yaml
    llm:
      provider: "openai"
@@ -58,11 +58,11 @@ For a minimal setup with file output only, you need just 2 API keys:
 **Option B: Claude (Anthropic)**
 1. Go to [console.anthropic.com](https://console.anthropic.com/)
 2. Create an API key
-3. Add to `.env`:
+3. Add to `config/.env`:
    ```bash
    ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
    ```
-4. Set provider in `config.yaml` (this is the default):
+4. Set provider in `config/config.yaml` (this is the default):
    ```yaml
    llm:
      provider: "claude"
@@ -91,7 +91,7 @@ To receive reports via email (Gmail example):
 3. Select app: "Mail", Select device: "Other" (enter "AI News Reporter")
 4. Click "Generate" and copy the 16-character password
 
-### 2. Configure .env
+### 2. Configure config/.env
 
 ```bash
 SMTP_HOST=smtp.gmail.com
@@ -100,7 +100,7 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx  # App password, NOT your Gmail password
 ```
 
-### 3. Enable in config.yaml
+### 3. Enable in config/config.yaml
 
 ```yaml
 delivery:
@@ -132,13 +132,13 @@ To receive reports in Slack:
 
 > **Note**: You may need workspace admin approval for this step.
 
-### 3. Configure .env
+### 3. Configure config/.env
 
 ```bash
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXX
 ```
 
-### 4. Enable in config.yaml
+### 4. Enable in config/config.yaml
 
 ```yaml
 delivery:
@@ -148,7 +148,7 @@ delivery:
 
 ## Configuration Reference
 
-### Environment Variables (.env)
+### Environment Variables (config/.env)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -161,7 +161,7 @@ delivery:
 | `SMTP_PASSWORD` | If using email | SMTP password or app password |
 | `SLACK_WEBHOOK_URL` | If using Slack | Slack incoming webhook URL |
 
-### Application Config (config.yaml)
+### Application Config (config/config.yaml)
 
 ```yaml
 # Keywords to search
@@ -231,7 +231,7 @@ To receive reports automatically every week without manual commands:
 
 ### Setup Steps
 
-1. Edit `config.yaml` - set your schedule:
+1. Edit `config/config.yaml` - set your schedule:
    ```yaml
    schedule:
      enabled: true
@@ -243,10 +243,10 @@ To receive reports automatically every week without manual commands:
 
 2. Run the setup script:
    ```bash
-   ./setup_cron.sh
+   ./scripts/setup_cron.sh
    ```
 
-The script reads schedule settings from `config.yaml` and sets up cron automatically.
+The script reads schedule settings from `config/config.yaml` and sets up cron automatically.
 
 ### Manual Setup
 
@@ -295,8 +295,13 @@ ai_news_reporter/
 │   ├── delivery/         # File, email, Slack
 │   ├── scheduler/        # APScheduler cron
 │   └── models/           # Article, Report
-├── config.yaml           # User config
-├── .env                  # API keys
+├── config/
+│   ├── config.yaml       # User config (git-ignored)
+│   ├── config.example.yaml
+│   ├── .env              # API keys (git-ignored)
+│   └── .env.example
+├── scripts/
+│   └── setup_cron.sh     # Cron setup script
 └── reports/              # Generated reports
 ```
 
